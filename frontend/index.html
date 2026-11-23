@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Educational image study for Indian ₹500 notes. Model predictions are not authenticity verification." />
+  <title>Currency Note Lab · INR</title>
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand__mark" aria-hidden="true">₹</div>
+      <div>
+        <p class="eyebrow">Educational image study · India</p>
+        <h1>Currency Note Lab</h1>
+      </div>
+    </div>
+    <div class="model-pill is-loading" id="modelPill">
+      <span class="model-pill__dot" aria-hidden="true"></span>
+      <span id="modelPillText">Checking model…</span>
+    </div>
+  </header>
+
+  <main class="page">
+    <aside class="notice" aria-label="Important model limitation">
+      <span class="notice__mark" aria-hidden="true">i</span>
+      <p>
+        <strong>For learning only.</strong>
+        Trained on a limited set of ₹500 note images. Predictions can be wrong and are not proof of authenticity.
+      </p>
+      <span class="notice__scope">₹500 only</span>
+    </aside>
+
+    <section class="workspace" aria-label="Note scan workspace">
+      <article class="card upload-card">
+        <div class="card__head">
+          <div>
+            <p class="step-label"><span>01</span> Image input</p>
+            <h2>Inspect a note</h2>
+            <p class="muted">Choose a clear, well-lit photo with the full note in frame.</p>
+          </div>
+        </div>
+
+        <label class="dropzone" id="dropzone" for="fileInput">
+          <input
+            type="file"
+            id="fileInput"
+            class="sr-only dropzone__input"
+            accept="image/jpeg,image/png,image/webp,image/bmp"
+            aria-label="Choose a ₹500 note image"
+            aria-describedby="uploadHelp"
+          />
+          <span class="dropzone__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 16V4" />
+              <path d="m8 8 4-4 4 4" />
+              <path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" />
+            </svg>
+          </span>
+          <span class="dropzone__title">Choose an image</span>
+          <span class="dropzone__or">or drop it here</span>
+          <span class="muted small" id="uploadHelp">JPG, PNG, WEBP or BMP · up to 10 MB</span>
+        </label>
+
+        <div class="preview" id="preview" hidden>
+          <img id="previewImg" alt="Preview of the selected note" />
+          <button class="preview__clear" id="clearBtn" type="button" aria-label="Remove selected image">×</button>
+        </div>
+
+        <div class="field field--supported">
+          <span class="field__label">Supported denomination</span>
+          <div class="supported-note">
+            <span class="supported-note__value">₹500</span>
+            <span class="supported-note__copy">The only denomination in this model’s training data.</span>
+          </div>
+          <input type="hidden" id="denomination" value="500" />
+        </div>
+
+        <button id="detectBtn" class="btn btn--primary" type="button" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 8V6a2 2 0 0 1 2-2h2" />
+            <path d="M16 4h2a2 2 0 0 1 2 2v2" />
+            <path d="M20 16v2a2 2 0 0 1-2 2h-2" />
+            <path d="M8 20H6a2 2 0 0 1-2-2v-2" />
+            <path d="M7 12h10" />
+          </svg>
+          <span id="detectBtnLabel">Analyze image</span>
+        </button>
+
+        <p class="hint" id="demoHint" hidden></p>
+      </article>
+
+      <article class="card result-card" id="resultCard" aria-live="polite">
+        <div class="result-empty" id="resultEmpty">
+          <span class="result-empty__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="6" width="18" height="12" rx="2" />
+              <circle cx="12" cy="12" r="2.6" />
+              <path d="M7 9.5h.01M17 14.5h.01" />
+            </svg>
+          </span>
+          <p class="step-label"><span>02</span> Model output</p>
+          <h3>Your reading will appear here</h3>
+          <p>The model provides an image classification, not an authenticity verdict.</p>
+        </div>
+
+        <div class="result-loading" id="resultLoading" role="status" aria-live="polite" hidden>
+          <div class="spinner" aria-hidden="true"></div>
+          <p>Analyzing the note image…</p>
+        </div>
+
+        <div class="result-body" id="resultBody" hidden>
+          <p class="step-label"><span>02</span> Model output</p>
+          <p class="eyebrow">Image classification · not verification</p>
+          <div class="verdict" id="verdict">—</div>
+          <p class="verdict-sub" id="verdictSub"></p>
+
+          <div class="confidence">
+            <div class="confidence__row">
+              <span>Model confidence</span>
+              <strong id="confidenceValue">—</strong>
+            </div>
+            <div
+              class="bar"
+              role="progressbar"
+              aria-label="Model confidence"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              aria-valuenow="0"
+            ><div class="bar__fill" id="confidenceBar"></div></div>
+            <p class="confidence__note">A model score, not the probability that the note is genuine.</p>
+          </div>
+
+          <dl class="meta">
+            <div class="meta__item">
+              <dt>Denomination</dt>
+              <dd id="metaDenom">—</dd>
+            </div>
+            <div class="meta__item">
+              <dt>Model mode</dt>
+              <dd id="metaMode">—</dd>
+            </div>
+            <div class="meta__item">
+              <dt>Analyzed</dt>
+              <dd id="metaDate">—</dd>
+            </div>
+            <div class="meta__item">
+              <dt>File</dt>
+              <dd id="metaFile">—</dd>
+            </div>
+          </dl>
+
+          <div class="warning" id="resultWarning" hidden></div>
+          <p class="result-caveat">Do not use this result to accept, reject, or verify currency.</p>
+
+          <div class="result-actions">
+            <a class="btn btn--ghost" id="downloadReport" href="#" download>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 4v11" />
+                <path d="m8 11 4 4 4-4" />
+                <path d="M5 19h14" />
+              </svg>
+              Download report
+            </a>
+            <button class="btn btn--ghost" id="scanAnother" type="button">Start another scan</button>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="stats" aria-label="Detection summary">
+      <article class="stat">
+        <p class="stat__label">Images analyzed</p>
+        <p class="stat__value" id="statTotal">0</p>
+        <p class="stat__sub">Stored locally</p>
+      </article>
+      <article class="stat stat--fake">
+        <p class="stat__label">Fake signals</p>
+        <p class="stat__value" id="statFake">0</p>
+        <p class="stat__sub">Model labels only</p>
+      </article>
+      <article class="stat stat--real">
+        <p class="stat__label">Real labels</p>
+        <p class="stat__value" id="statReal">0</p>
+        <p class="stat__sub">Not proof of authenticity</p>
+      </article>
+      <article class="stat">
+        <p class="stat__label">Average model score</p>
+        <p class="stat__value" id="statConfidence">—</p>
+        <p class="stat__sub">Across saved images</p>
+      </article>
+    </section>
+
+    <section class="card history-card">
+      <div class="section-head">
+        <div>
+          <p class="step-label"><span>03</span> Recent activity</p>
+          <h2>Image history</h2>
+          <p class="muted">Saved image classifications and downloadable reports.</p>
+        </div>
+        <div class="filters" role="group" aria-label="Filter detections">
+          <button class="chip is-active" type="button" data-filter="all">All</button>
+          <button class="chip" type="button" data-filter="FAKE">Fake</button>
+          <button class="chip" type="button" data-filter="REAL">Real</button>
+        </div>
+      </div>
+
+      <div class="table-wrap" id="historyTableWrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Image</th>
+              <th scope="col">Detected</th>
+              <th scope="col">Denomination</th>
+              <th scope="col">Model label</th>
+              <th scope="col">Model score</th>
+              <th scope="col">Report</th>
+              <th scope="col"><span class="sr-only">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody id="historyBody"></tbody>
+        </table>
+      </div>
+
+      <div class="empty-state" id="historyEmpty" hidden>
+        <p><strong>No detections yet.</strong></p>
+        <p class="muted">Scan your first note above — results and reports will appear here.</p>
+      </div>
+
+      <div class="pager" id="pager" hidden>
+        <button class="btn btn--ghost btn--small" id="prevPage" type="button">Previous</button>
+        <span class="pager__label" id="pageLabel">Page 1</span>
+        <button class="btn btn--ghost btn--small" id="nextPage" type="button">Next</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>
+      Educational project · Not a legal or forensic verification system.
+      Report suspected counterfeit notes to your bank or the police.
+    </p>
+  </footer>
+
+  <div class="modal" id="detailModal" hidden>
+    <div class="modal__backdrop" data-close></div>
+    <div class="modal__panel" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <button class="modal__close" id="modalClose" type="button" aria-label="Close details">×</button>
+      <h2 id="modalTitle">Detection details</h2>
+      <div class="modal__grid">
+        <div class="modal__image">
+          <img id="modalImage" alt="Scanned note" />
+        </div>
+        <div class="modal__info" id="modalInfo"></div>
+      </div>
+      <div class="modal__actions">
+        <a class="btn btn--primary" id="modalReport" href="#" download>Download PDF report</a>
+        <button class="btn btn--danger" id="modalDelete" type="button">Delete record</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

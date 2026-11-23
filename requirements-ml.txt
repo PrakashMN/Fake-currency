@@ -1,0 +1,3 @@
+# Install these only when you are ready to train / run a real model.
+# The web app and demo mode work without TensorFlow.
+tensorflow>=2.15
